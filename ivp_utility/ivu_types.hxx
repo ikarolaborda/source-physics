@@ -229,8 +229,9 @@ enum IVP_RETURN_TYPE {
 #define IVP_CDECL       /* set this to whatever you need to satisfy your linker */
 
 #if !defined(__MWERKS__) || !defined(__POWERPC__)
-#   ifdef OSX
+#   if defined(OSX) || defined(__APPLE__)
 #       include <malloc/malloc.h>
+#       include <alloca.h>   /* macOS SDK 26+ stdlib.h no longer pulls in alloca.h */
 #   else
 #       include <malloc.h>
 #   endif
