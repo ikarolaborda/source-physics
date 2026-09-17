@@ -64,7 +64,13 @@ IVP_MRC_TYPE IVP_Mindist_Minimize_Solver::p_minimize_PF(const IVP_Compact_Edge *
 	    min_edge = e;
 	}
     }
-    IVP_ASSERT(min_edge);
+    // A non-finite transform makes every comparison above false.  In release
+    // builds the assertion alone allowed a null edge to reach p_minimize_PK,
+    // which then dereferenced it.  Let the existing mindist rescue path retire
+    // the invalid contact instead.
+    if (!min_edge){
+	return IVP_MRC_ENDLESS_LOOP;
+    }
     return p_minimize_PK( P, min_edge, m_cache_P, m_cache_F);   // s val in range
 }
 
@@ -130,7 +136,9 @@ IVP_MRC_TYPE IVP_Mindist_Minimize_Solver::p_minimize_BF(IVP_Cache_Ball *m_cache_
 	    min_edge = e;
 	}
     }
-    IVP_ASSERT(min_edge);
+    if (!min_edge){
+	return IVP_MRC_ENDLESS_LOOP;
+    }
     return p_minimize_BK( m_cache_B, min_edge, m_cache_F);
 }
 
@@ -280,6 +288,9 @@ IVP_MRC_TYPE IVP_Mindist_Minimize_Solver::p_minimize_Leave_PF(const IVP_Compact_
 		best_edge = e;
 	    }
 	}
+    }
+    if (!best_edge){
+	return IVP_MRC_ENDLESS_LOOP;
     }
     return p_minimize_KK(min_edge,best_edge, m_cache_P, m_cache_F);
 } // p_minimize_Leave_PF
@@ -970,6 +981,9 @@ IVP_MRC_TYPE IVP_Mindist_Minimize_Solver::p_minimize_PK(const IVP_Compact_Edge *
 				      IVP_Cache_Ledge_Point *m_cache_P,
 				      IVP_Cache_Ledge_Point *m_cache_K)
 {
+    if (!P || !K){
+	return IVP_MRC_ENDLESS_LOOP;
+    }
     // Checks wether we can switch to the case PP (vertex - vertex)
     // If not: take appropriate branch
     IVP_ASSERT( m_cache_P->tmp.synapse == mindist->get_sorted_synapse(0));
